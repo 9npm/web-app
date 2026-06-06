@@ -1,0 +1,11 @@
+{
+  "name": "together-web",
+  "version": "1.0.0",
+  "description": "Together — Social Space Web App",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "npx http-server . -p 3000 -o"
+  },
+  "license": "ISC"
+}

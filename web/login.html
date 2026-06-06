@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Together — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0b0e17; --bg2: #111520; --surface: #1a2035; --surface2: #1f2840;
+  --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.12);
+  --accent: #4f8ef7; --accent2: #7b5ea7; --text: #e8ecf8;
+  --text2: #8892aa; --text3: #4a5468; --red: #ef4444; --green: #22c55e;
+  --font: 'Outfit', sans-serif; --serif: 'Playfair Display', serif;
+  --radius: 14px; --radius-sm: 8px;
+}
+html, body {
+  min-height: 100vh; background: var(--bg); color: var(--text);
+  font-family: var(--font); display: flex; align-items: center;
+  justify-content: center; overflow-x: hidden; padding: 20px;
+}
+
+/* BG GRAPHICS */
+.bg-canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.bg-orb { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.18; animation: drift 20s ease-in-out infinite alternate; }
+.bg-orb:nth-child(1) { width: 600px; height: 600px; background: #4f8ef7; top: -200px; left: -150px; }
+.bg-orb:nth-child(2) { width: 500px; height: 500px; background: #7b5ea7; bottom: -150px; right: -100px; animation-delay: -7s; }
+.bg-orb:nth-child(3) { width: 350px; height: 350px; background: #2dd4bf; top: 40%; left: 40%; animation-delay: -14s; }
+@keyframes drift {
+  0% { transform: translate(0,0) scale(1); }
+  33% { transform: translate(30px,-40px) scale(1.05); }
+  66% { transform: translate(-20px,30px) scale(0.97); }
+  100% { transform: translate(20px,-20px) scale(1.03); }
+}
+.grid-lines {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image: linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse at center, transparent 30%, black 100%);
+}
+
+/* AUTH CARD - NATURAL HEIGHT */
+/* PC CARD — 420px wide, alag padding */
+.auth-card {
+  position: relative; z-index: 1; width: 100%; max-width: 420px;
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 20px; padding: 40px 36px;
+  animation: slideUp .2s ease-out both;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.auth-logo { font-family: var(--serif); font-size: 28px; text-align: center; margin-bottom: 6px; letter-spacing: -0.3px; }
+.auth-sub { text-align: center; font-size: 13px; color: var(--text3); margin-bottom: 24px; }
+
+/* TABS */
+.auth-tabs {
+  display: flex; background: var(--bg2); border-radius: 50px;
+  padding: 4px; margin-bottom: 24px; position: relative;
+}
+.auth-tab {
+  flex: 1; padding: 9px; text-align: center; border-radius: 50px;
+  font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text2);
+  transition: color .35s; position: relative; z-index: 1; user-select: none;
+}
+.auth-tab.active { color: white; }
+.tab-pill {
+  position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px);
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius: 50px; transition: transform .4s cubic-bezier(.4,0,.2,1);
+  box-shadow: 0 2px 12px rgba(79,142,247,0.35);
+}
+.tab-pill.right { transform: translateX(100%); }
+
+/* CONTAINER & PANELS - NO COLLAPSE */
+.forms-container { position: relative; width: 100%; }
+.form-panel { display: block; width: 100%; }
+.form-panel.hidden { display: none; }
+
+@keyframes panelFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.form-panel:not(.hidden) {
+  animation: panelFadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/* INPUT FIELDS & BUTTONS */
+.field { margin-bottom: 16px; }
+.field label { font-size: 12px; color: var(--text2); display: block; margin-bottom: 5px; text-transform: uppercase; letter-spacing: .8px; }
+.field input {
+  width: 100%; background: var(--bg2); border: 1px solid var(--border2);
+  border-radius: var(--radius-sm); padding: 10px 13px;
+  color: var(--text); font-size: 14px; font-family: var(--font);
+  outline: none; transition: border-color .2s, box-shadow .2s;
+}
+.field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,142,247,.12); }
+.field input::placeholder { color: var(--text3); }
+
+/* PASSWORD TOGGLE STYLES */
+.pass-wrapper { position: relative; display: flex; align-items: center; }
+.pass-wrapper input { padding-right: 44px; }
+.pass-toggle {
+  position: absolute; right: 10px;
+  width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+  background: none; border: none; border-radius: 6px;
+  color: var(--text3); cursor: pointer; outline: none;
+  transition: color .2s, background .2s;
+}
+.pass-toggle:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+.pass-toggle svg { display: block; flex-shrink: 0; }
+
+.auth-btn {
+  width: 100%; padding: 12px; background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: none; border-radius: var(--radius-sm); color: white;
+  font-size: 14px; font-weight: 600; cursor: pointer; font-family: var(--font);
+  transition: all .2s; margin-top: 4px;
+}
+.auth-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(79,142,247,.35); }
+.auth-btn:disabled { opacity: .6; transform: none; cursor: not-allowed; }
+
+.auth-msg { font-size: 12px; text-align: center; margin-top: 12px; min-height: 18px; line-height: 18px; }
+.auth-msg.err { color: var(--red); }
+.auth-msg.ok  { color: var(--green); }
+
+/* PASSWORD CHECKLIST */
+.pass-rules {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 0 12px;
+  margin-top: 8px; display: flex; flex-direction: column; gap: 0;
+  overflow: hidden; max-height: 0; opacity: 0;
+  transition: max-height .35s ease, opacity .3s ease, padding .3s ease, gap .3s ease;
+}
+.pass-rules.visible { max-height: 120px; opacity: 1; padding: 10px 12px; gap: 5px; }
+.rule {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11.5px; color: var(--text3); transition: color .25s;
+}
+.rule.met { color: var(--green); }
+.rule .dot {
+  width: 16px; height: 16px; border-radius: 50%;
+  border: 1.5px solid var(--text3); display: flex; align-items: center;
+  justify-content: center; flex-shrink: 0; font-size: 9px;
+  transition: background .25s, border-color .25s;
+}
+.rule.met .dot { background: var(--green); border-color: var(--green); color: white; }
+
+/* MOBILE RESPONSIVE — alag size, PC ko affect nahi karta */
+@media (max-width: 480px) {
+  body { padding: 12px; }
+  .auth-card { padding: 24px 18px; border-radius: 16px; width: 100%; max-width: none; }
+  .auth-logo { font-size: 24px; }
+  .auth-sub { margin-bottom: 18px; }
+  .field { margin-bottom: 13px; }
+  .field input { padding: 11px 12px; font-size: 15px; }
+  .auth-btn { padding: 13px; font-size: 15px; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-canvas">
+  <div class="bg-orb"></div>
+  <div class="bg-orb"></div>
+  <div class="bg-orb"></div>
+</div>
+<div class="grid-lines"></div>
+
+<div class="auth-card">
+  <div class="auth-logo">Together ✦</div>
+  <div class="auth-sub">Your private space</div>
+
+  <div class="auth-tabs">
+    <div class="auth-tab active" id="tabLogin" onclick="switchTab('login')">Login</div>
+    <div class="auth-tab" id="tabSignup" onclick="switchTab('signup')">Sign Up</div>
+    <div class="tab-pill" id="tabPill"></div>
+  </div>
+
+  <div class="forms-container">
+    <div class="form-panel" id="loginPanel">
+      <div class="field"><label>Username</label><input type="text" id="loginUser" placeholder="Enter username" autocomplete="username"></div>
+      
+      <div class="field">
+        <label>Password</label>
+        <div class="pass-wrapper">
+          <input type="password" id="loginPass" placeholder="Enter password" onkeydown="if(event.key==='Enter') handleAuth()">
+          <button type="button" class="pass-toggle" id="toggleLoginPass" onclick="togglePass('loginPass', this)" aria-label="Show password">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <button class="auth-btn" id="loginBtn" onclick="handleAuth()">Login →</button>
+      <div class="auth-msg" id="loginMsg"></div>
+    </div>
+
+    <div class="form-panel hidden" id="signupPanel">
+      <div class="field">
+        <label>Display Name</label>
+        <input type="text" id="signupDisplayName" placeholder="Enter display name" autocomplete="off">
+      </div>
+
+      <div class="field">
+        <label>Username</label>
+        <input type="text" id="signupUser" placeholder="Choose a username" autocomplete="off"
+          oninput="checkUserRules(this.value)"
+          onfocus="document.getElementById('userRules').classList.add('visible')"
+          onblur="document.getElementById('userRules').classList.remove('visible')">
+        <div class="pass-rules" id="userRules">
+          <div class="rule" id="rule-userLen"><div class="dot"></div> Min 3 characters</div>
+          <div class="rule" id="rule-userSpace"><div class="dot"></div> No spaces allowed</div>
+        </div>
+      </div>
+      
+      <div class="field">
+        <label>Password</label>
+        <div class="pass-wrapper">
+          <input type="password" id="signupPass" placeholder="Min 6 characters"
+            oninput="checkPassRules(this.value)"
+            onfocus="document.getElementById('passRules').classList.add('visible')"
+            onblur="document.getElementById('passRules').classList.remove('visible')"
+            onkeydown="if(event.key==='Enter') handleAuth()">
+          <button type="button" class="pass-toggle" id="toggleSignupPass" onclick="togglePass('signupPass', this)" aria-label="Show password">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <div class="pass-rules" id="passRules">
+          <div class="rule" id="rule-upper"><div class="dot"></div> 1 uppercase letter (A–Z)</div>
+          <div class="rule" id="rule-lower"><div class="dot"></div> 1 lowercase letter (a–z)</div>
+          <div class="rule" id="rule-numSym"><div class="dot"></div> 1 number or special symbol</div>
+        </div>
+      </div>
+
+      <button class="auth-btn" id="signupBtn" onclick="handleAuth()">Create Account →</button>
+      <div class="auth-msg" id="signupMsg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<script>
+// ── Firebase Setup ──────────────────────────────────
+const firebaseConfig = {
+  apiKey:            "AIzaSyAM6Eva0r9c8T0PJ7BjMKZcA1bUh2SKQb4",
+  authDomain:        "together-app-b09fd.firebaseapp.com",
+  projectId:         "together-app-b09fd",
+  storageBucket:     "together-app-b09fd.firebasestorage.app",
+  messagingSenderId: "207189978772",
+  appId:             "1:207189978772:web:8b2ee7a8449ad67a4ece81"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+// ────────────────────────────────────────────────────
+
+let mode = 'login';
+
+function switchTab(to) {
+  if (to === mode) return;
+  mode = to;
+
+  const container = document.querySelector('.forms-container');
+  const startHeight = container.offsetHeight;
+  
+  // Set fixed starting height to trigger transition
+  container.style.height = startHeight + 'px';
+  container.style.overflow = 'hidden';
+  container.offsetHeight; // Force reflow
+
+  // pill slide
+  document.getElementById('tabPill').classList.toggle('right', to === 'signup');
+
+  // tab labels
+  document.getElementById('tabLogin').classList.toggle('active',  to === 'login');
+  document.getElementById('tabSignup').classList.toggle('active', to === 'signup');
+
+  // panels display switch
+  const login  = document.getElementById('loginPanel');
+  const signup = document.getElementById('signupPanel');
+
+  if (to === 'signup') {
+    login.classList.add('hidden');
+    signup.classList.remove('hidden');
+    // reset rules box whenever signup panel opens fresh
+    document.getElementById('passRules').classList.remove('visible');
+    document.getElementById('userRules').classList.remove('visible');
+    document.getElementById('signupDisplayName').focus();
+  } else {
+    signup.classList.add('hidden');
+    login.classList.remove('hidden');
+    // hide rules box when leaving signup
+    document.getElementById('passRules').classList.remove('visible');
+    document.getElementById('userRules').classList.remove('visible');
+    document.getElementById('loginUser').focus();
+  }
+
+  // Measure target height
+  const targetHeight = to === 'signup' ? signup.offsetHeight : login.offsetHeight;
+  
+  // Trigger height transition
+  container.style.transition = 'height 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+  container.style.height = targetHeight + 'px';
+
+  // Clean up inline styles after transition to allow rules checklists to expand normally
+  setTimeout(() => {
+    container.style.height = '';
+    container.style.overflow = '';
+    container.style.transition = '';
+  }, 300);
+}
+
+// SVG icons for password toggle
+const EYE_OPEN = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+const EYE_OFF  = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+
+function togglePass(inputId, btn) {
+  const input = document.getElementById(inputId);
+  const showing = input.type === 'password';
+  input.type = showing ? 'text' : 'password';
+  btn.innerHTML = showing ? EYE_OFF : EYE_OPEN;
+  btn.setAttribute('aria-label', showing ? 'Hide password' : 'Show password');
+}
+
+async function hashPassword(p) {
+  const data = new TextEncoder().encode(p + 'together_salt_2025');
+  const buf  = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+async function handleAuth() {
+  const isLogin = mode === 'login';
+  const user = document.getElementById(isLogin ? 'loginUser' : 'signupUser').value.trim().toLowerCase();
+  const pass = document.getElementById(isLogin ? 'loginPass' : 'signupPass').value;
+  const displayName = isLogin ? '' : document.getElementById('signupDisplayName').value.trim();
+  const msgEl = document.getElementById(isLogin ? 'loginMsg' : 'signupMsg');
+  const btn   = document.getElementById(isLogin ? 'loginBtn'  : 'signupBtn');
+
+  if (isLogin) {
+    if (!user || !pass) { setMsg(msgEl, '⚠ Fill in both fields', 'err'); return; }
+  } else {
+    if (!displayName || !user || !pass) { setMsg(msgEl, '⚠ Fill in all fields', 'err'); return; }
+    
+    // Validate username rules
+    const userRules = validateUser(user);
+    if (!userRules.len) { setMsg(msgEl, '⚠ Username must be at least 3 characters', 'err'); return; }
+    if (!userRules.noSpace) { setMsg(msgEl, '⚠ Username cannot contain spaces', 'err'); return; }
+
+    // Validate password rules
+    const rules = validatePass(pass);
+    if (!rules.upper)  { setMsg(msgEl, '⚠ Password needs an uppercase letter', 'err'); return; }
+    if (!rules.lower)  { setMsg(msgEl, '⚠ Password needs a lowercase letter', 'err'); return; }
+    if (!rules.numSym) { setMsg(msgEl, '⚠ Password needs a number or special symbol', 'err'); return; }
+  }
+
+  btn.disabled = true;
+  btn.textContent = isLogin ? 'Logging in…' : 'Creating account…';
+
+  try {
+    const hashed  = await hashPassword(pass);
+    const userRef = db.collection('users').doc(user);
+
+    if (isLogin) {
+      // LOGIN — check if user exists and password matches
+      const doc = await userRef.get();
+      if (!doc.exists) {
+        setMsg(msgEl, '❌ Username not found', 'err');
+      } else if (doc.data().password !== hashed) {
+        setMsg(msgEl, '❌ Wrong password', 'err');
+      } else {
+        const userData = doc.data();
+        sessionStorage.setItem('together_user', JSON.stringify({ 
+          username: user,
+          displayName: userData.displayName || user
+        }));
+        setMsg(msgEl, '✓ Welcome back! Redirecting…', 'ok');
+        setTimeout(() => window.location.href = 'main.html', 800);
+      }
+    } else {
+      // SIGNUP — check duplicate username, then create
+      const doc = await userRef.get();
+      if (doc.exists) {
+        setMsg(msgEl, '❌ Username already taken — try another', 'err');
+      } else {
+        await userRef.set({
+          username:  user,
+          displayName: displayName,
+          password:  hashed,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        sessionStorage.setItem('together_user', JSON.stringify({ 
+          username: user,
+          displayName: displayName
+        }));
+        setMsg(msgEl, '✓ Account created! Redirecting…', 'ok');
+        setTimeout(() => window.location.href = 'main.html', 800);
+      }
+    }
+  } catch(e) {
+    setMsg(msgEl, '⚠ Error: ' + e.message, 'err');
+  }
+
+  btn.disabled = false;
+  btn.textContent = isLogin ? 'Login →' : 'Create Account →';
+}
+
+function setMsg(el, txt, type) { el.textContent = txt; el.className = 'auth-msg ' + type; }
+
+function validateUser(u) {
+  return {
+    len: u.length >= 3,
+    noSpace: !/\s/.test(u) && u.length > 0
+  };
+}
+
+function checkUserRules(val) {
+  const r = validateUser(val);
+  setRule('rule-userLen', r.len);
+  setRule('rule-userSpace', r.noSpace);
+}
+
+function validatePass(p) {
+  return {
+    upper:  /[A-Z]/.test(p),
+    lower:  /[a-z]/.test(p),
+    numSym: /[0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(p)
+  };
+}
+
+function checkPassRules(val) {
+  const r = validatePass(val);
+  setRule('rule-upper',  r.upper);
+  setRule('rule-lower',  r.lower);
+  setRule('rule-numSym', r.numSym);
+}
+
+function setRule(id, met) {
+  const el  = document.getElementById(id);
+  const dot = el.querySelector('.dot');
+  el.classList.toggle('met', met);
+  dot.textContent = met ? '✓' : '';
+}
+
+document.getElementById('loginUser').focus();
+</script>
+</body>
+</html>
