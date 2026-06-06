@@ -853,7 +853,7 @@ const db = firebase.firestore();
 // ── Auth Guard ────────────────────────────────────────
 const sessionUser = JSON.parse(sessionStorage.getItem('together_user'));
 if (!sessionUser) {
-  window.location.href = 'login.html';
+  window.location.href = 'index.html';
 }
 const localUsername = sessionUser.username;
 const localDisplayName = sessionUser.displayName || localUsername;
@@ -972,12 +972,12 @@ function logout() {
 
 function executeLogout() {
   document.getElementById('logoutConfirmModal').classList.remove('active');
-  cleanupLoungeOnLeave();
-  cleanupLocalCall();
-  userRef.set({ status: 'offline', lastActive: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true }).then(() => {
-    sessionStorage.removeItem('together_user');
-    window.location.href = 'login.html';
-  });
+  try { cleanupLoungeOnLeave(); } catch(e) {}
+  try { cleanupLocalCall(); } catch(e) {}
+  
+  userRef.set({ status: 'offline', lastActive: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true }).catch(() => {});
+  sessionStorage.removeItem('together_user');
+  window.location.href = 'index.html';
 }
 
 // ── Friend Requests & Friends Sync ────────────────────
