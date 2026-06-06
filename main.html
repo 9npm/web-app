@@ -791,6 +791,18 @@ html, body {
   </div>
 </div>
 
+<!-- LOGOUT CONFIRM MODAL -->
+<div class="modal-overlay" id="logoutConfirmModal">
+  <div class="modal-card" style="width:320px; text-align:center;">
+    <div class="modal-title" style="color:var(--red);">Log Out?</div>
+    <div class="modal-desc">Are you sure you want to log out of your account?</div>
+    <div class="modal-buttons" style="margin-top:20px; justify-content:center; gap:12px;">
+      <button class="btn-text" onclick="document.getElementById('logoutConfirmModal').classList.remove('active')">Cancel</button>
+      <button class="btn-primary" style="background:var(--red); border-color:var(--red); color:white;" onclick="executeLogout()">Yes, Log Out</button>
+    </div>
+  </div>
+</div>
+
 <!-- ADD FRIEND MODAL -->
 <div class="modal-overlay" id="addFriendModal">
   <div class="modal-card">
@@ -955,6 +967,11 @@ function showTab(tabId) {
 }
 
 function logout() {
+  document.getElementById('logoutConfirmModal').classList.add('active');
+}
+
+function executeLogout() {
+  document.getElementById('logoutConfirmModal').classList.remove('active');
   cleanupLoungeOnLeave();
   cleanupLocalCall();
   userRef.set({ status: 'offline', lastActive: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true }).then(() => {
